@@ -30,6 +30,7 @@ import org.apache.spark.sql.SaveMode
 class DataWriter (
     val userName: String,
     val password: String,
+    val sessionId: String,
     val login: String,
     val version: String,
     val datasetName: String,
@@ -40,7 +41,7 @@ class DataWriter (
   def writeMetadata(metaDataJson: String,
       mode: SaveMode,
       upsert: Boolean): Option[String] = {
-    val partnerConnection = createConnection(userName, password, login, version)
+    val partnerConnection = createConnection(userName, password, sessionId, login, version)
     val oper = operation(mode, upsert)
 
     val sobj = new SObject()
@@ -87,7 +88,7 @@ class DataWriter (
         sobj.setField("InsightsExternalDataId", metadataId)
         sobj.setField("PartNumber", partNumber)
 
-        val partnerConnection = Utils.createConnection(userName, password, login, version)
+        val partnerConnection = Utils.createConnection(userName, password, sessionId, login, version)
         val results = partnerConnection.create(Array(sobj))
 
         val resultSuccess = results.map(saveResult => {
@@ -108,7 +109,7 @@ class DataWriter (
 
   def commit(id: String): Boolean = {
 
-    val partnerConnection = Utils.createConnection(userName, password, login, version)
+    val partnerConnection = Utils.createConnection(userName, password, sessionId, login, version)
 
     val sobj = new SObject()
     sobj.setType("InsightsExternalData")

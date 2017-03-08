@@ -2,16 +2,18 @@ name := "spark-salesforce"
 
 version := "2.0.0"
 
-organization := "com.springml"
+organization := "io.lingk"
 
 scalaVersion := "2.11.7"
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
+resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+
 libraryDependencies ++= Seq(
-  "com.force.api" % "force-wsc" % "38.0.4",
-  "com.force.api" % "force-partner-api" % "38.0.0",
-  "com.springml" % "salesforce-wave-api" % "1.0.6",
+  "com.force.api" % "force-wsc" % "39.0.1",
+  "com.force.api" % "force-partner-api" % "39.0.0",
+  "io.lingk" % "salesforce-wave-api" % "1.0.7",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
@@ -58,14 +60,6 @@ spDescription := """Spark Salesforce Wave Connector
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (version.value.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-}
-
 pomExtra := (
   <url>https://github.com/springml/spark-salesforce</url>
     <licenses>
@@ -75,11 +69,6 @@ pomExtra := (
         <distribution>repo</distribution>
       </license>
     </licenses>
-    <scm>
-      <connection>scm:git:github.com/springml/spark-salesforce</connection>
-      <developerConnection>scm:git:git@github.com:springml/spark-salesforce</developerConnection>
-      <url>github.com/springml/spark-salesforce</url>
-    </scm>
     <developers>
       <developer>
         <id>springml</id>

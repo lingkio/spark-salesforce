@@ -15,6 +15,8 @@ import com.springml.salesforce.wave.util.WaveAPIConstants
 class SFObjectWriter (
     val username: String,
     val password: String,
+    val useSessionId: Boolean,
+    val sessionId: String,
     val login: String,
     val apiVersion: String,
     val sfObject: String,
@@ -46,9 +48,7 @@ class SFObjectWriter (
         return true
       }
 
-      logger.info("Job not completed, waiting...")
-      Thread.sleep(200)
-      i = i + 1
+
     }
 
     print("Returning false...")
@@ -57,7 +57,7 @@ class SFObjectWriter (
   }
 
   def bulkAPI() : BulkAPI = {
-    APIFactory.getInstance.bulkAPI(username, password, login, apiVersion)
+    APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, apiVersion)
   }
 
   private def operation(mode: SaveMode): String = {

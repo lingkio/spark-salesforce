@@ -37,11 +37,12 @@ import scala.util.Try
 object Utils extends Serializable {
   @transient val logger = Logger.getLogger("Utils")
 
-  def createConnection(username: String, password: String,
+  def createConnection(username: String, password: String, sessionId: String,
       login: String, version: String):PartnerConnection = {
     val config = new ConnectorConfig()
     config.setUsername(username)
     config.setPassword(password)
+    config.setSessionId(sessionId)
     val endpoint = if (login.endsWith("/")) (login + "services/Soap/u/" + version) else (login + "/services/Soap/u/" + version);
     config.setAuthEndpoint(endpoint)
     config.setServiceEndpoint(endpoint)
@@ -150,9 +151,9 @@ object Utils extends Serializable {
     }
   }
 
-  def monitorJob(objId: String, username: String, password:
+  def monitorJob(objId: String, username: String, sessionId: String, password:
       String, login: String, version: String) : Boolean = {
-    var partnerConnection = Utils.createConnection(username, password, login, version)
+    var partnerConnection = Utils.createConnection(username, password, sessionId, login, version)
     try {
       monitorJob(partnerConnection, objId, 500)
     } catch {
@@ -161,7 +162,7 @@ object Utils extends Serializable {
         logger.info("Error Message from Salesforce Wave " + exMsg)
         if (exMsg contains "Invalid Session") {
           logger.info("Session expired. Monitoring Job using new connection")
-          return monitorJob(objId, username, password, login, version)
+          return monitorJob(objId, username, sessionId, password, login, version)
         } else {
           throw uefault
         }

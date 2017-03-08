@@ -58,8 +58,9 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
    *
    */
   override def createRelation(sqlContext: SQLContext, parameters: Map[String, String], schema: StructType) = {
-    val username = param(parameters, "SF_USERNAME", "username")
-    val password = param(parameters, "SF_PASSWORD", "password")
+    val username = optionalParam(parameters, "username")
+    val password = optionalParam(parameters, "password")
+    val sessionId = optionalParam(parameters, "sessionId")
     val login = parameters.getOrElse("login", "https://login.salesforce.com")
     val version = parameters.getOrElse("version", "36.0")
     val saql = parameters.get("saql")
@@ -75,12 +76,13 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     validateMutualExclusive(saql, soql, "saql", "soql")
     val inferSchemaFlag = flag(inferSchema, "inferSchema");
 
+    val useSessionId = (sessionId != null)
     if (saql.isDefined) {
       val waveAPI = APIFactory.getInstance.waveAPI(username, password, login, version)
       DatasetRelation(waveAPI, null, saql.get, schema, sqlContext,
           resultVariable, pageSize.toInt, encodeFields, inferSchemaFlag)
     } else {
-      val forceAPI = APIFactory.getInstance.forceAPI(username, password, login,
+      val forceAPI = APIFactory.getInstance.forceAPI(username, password, useSessionId, sessionId, login,
           version, Integer.getInteger(pageSize), Integer.getInteger(maxRetry))
       DatasetRelation(null, forceAPI, soql.get, schema, sqlContext,
           null, 0, encodeFields, inferSchemaFlag)
@@ -90,8 +92,9 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
 
   override def createRelation(sqlContext: SQLContext, mode: SaveMode, parameters: Map[String, String], data: DataFrame): BaseRelation = {
 
-    val username = param(parameters, "SF_USERNAME", "username")
-    val password = param(parameters, "SF_PASSWORD", "password")
+    val username = optionalParam(parameters, "username")
+    val password = optionalParam(parameters, "password")
+    val sessionId = optionalParam(parameters, "sessionId")
     val datasetName = parameters.get("datasetName")
     val sfObject = parameters.get("sfObject")
     val appName = parameters.getOrElse("appName", null)
@@ -104,6 +107,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     val monitorJob = parameters.getOrElse("monitorJob", "false")
 
     validateMutualExclusive(datasetName, sfObject, "datasetName", "sfObject")
+    validateMutualExclusive(parameters.get("username"), parameters.get("sessionId"), "username", "sessionid")
 
     if (datasetName.isDefined) {
       val upsertFlag = flag(upsert, "upsert")
@@ -114,12 +118,13 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       }
 
       logger.info("Writing dataframe into Salesforce Wave")
-      writeInSalesforceWave(username, password, login, version,
+      writeInSalesforceWave(username, password, sessionId, login, version,
           datasetName.get, appName, usersMetadataConfig, mode,
           flag(upsert, "upsert"), flag(monitorJob, "monitorJob"), data, metadataFile)
     } else {
+      val useSessionId = (sessionId != null)
       logger.info("Updating Salesforce Object")
-      updateSalesforceObject(username, password, login, version, sfObject.get, mode, data)
+      updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, data)
     }
 
     return createReturnRelation(data)
@@ -128,20 +133,22 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
   private def updateSalesforceObject(
       username: String,
       password: String,
+      sessionId: String,
       login: String,
       version: String,
       sfObject: String,
       mode: SaveMode,
       data: DataFrame) {
 
+    val useSessionId = (sessionId != null)
     val csvHeader = Utils.csvHeadder(data.schema);
     logger.info("no of partitions before repartitioning is " + data.rdd.partitions.length)
     logger.info("Repartitioning rdd for 10mb partitions")
     val repartitionedRDD = Utils.repartition(data.rdd)
     logger.info("no of partitions after repartitioning is " + repartitionedRDD.partitions.length)
 
-    val bulkAPI = APIFactory.getInstance.bulkAPI(username, password, login, version)
-    val writer = new SFObjectWriter(username, password, login, version, sfObject, mode, csvHeader)
+    val bulkAPI = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, version)
+    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, csvHeader)
     logger.info("Writing data")
     val successfulWrite = writer.writeData(repartitionedRDD)
     logger.info(s"Writing data was successful was $successfulWrite")
@@ -154,6 +161,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
   private def writeInSalesforceWave(
       username: String,
       password: String,
+      sessionId: String,
       login: String,
       version: String,
       datasetName: String,
@@ -164,7 +172,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       monitorJob: Boolean,
       data: DataFrame,
       metadata: Option[String]) {
-    val dataWriter = new DataWriter(username, password, login, version, datasetName, appName)
+    val dataWriter = new DataWriter(username, password, sessionId, login, version, datasetName, appName)
 
     val metaDataJson = Utils.metadata(metadata, usersMetadataConfig, data.schema, datasetName)
 
@@ -201,7 +209,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
 
     if (monitorJob) {
       logger.info("Monitoring Job status in Salesforce wave")
-      if (Utils.monitorJob(writtenId.get, username, password, login, version)) {
+      if (Utils.monitorJob(writtenId.get, username, password, sessionId, login, version)) {
         logger.info(s"Successfully dataset $datasetName has been processed in Salesforce Wave")
       } else {
         sys.error(s"Upload Job for dataset $datasetName failed in Salesforce Wave. Check Monitor Job in Salesforce Wave for more details")
@@ -220,6 +228,14 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     if ((!opt1.isDefined && !opt2.isDefined)) {
       sys.error(s"""Either '$opt1Name' or '$opt2Name' have to be specified for creating dataframe""")
     }
+  }
+  
+  private def optionalParam(parameters: Map[String, String], paramName: String) : String = {
+    val param = parameters.get(paramName)
+    if (param == None) {
+      return ""
+    }
+    return param.get
   }
 
   private def param(parameters: Map[String, String], envName: String, paramName: String) : String = {
