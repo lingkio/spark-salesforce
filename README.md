@@ -1,3 +1,6 @@
+#
+This fork contains modifications to support bearerToken (and sessionId) authentication.  It requires a forked version of the salesforce-wave-api library, found here: https://github.com/lingkio/salesforce-wave-api
+
 # Spark Salesforce Library
 
 A library for connecting Spark with Salesforce and Salesforce Wave.
