@@ -76,7 +76,8 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     validateMutualExclusive(saql, soql, "saql", "soql")
     val inferSchemaFlag = flag(inferSchema, "inferSchema");
 
-    val useSessionId = (sessionId != null)
+    val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
+    
     if (saql.isDefined) {
       val waveAPI = APIFactory.getInstance.waveAPI(username, password, login, version)
       DatasetRelation(waveAPI, null, saql.get, schema, sqlContext,
@@ -122,7 +123,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
           datasetName.get, appName, usersMetadataConfig, mode,
           flag(upsert, "upsert"), flag(monitorJob, "monitorJob"), data, metadataFile)
     } else {
-      val useSessionId = (sessionId != null)
+      val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
       logger.info("Updating Salesforce Object")
       updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, data)
     }
@@ -140,7 +141,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       mode: SaveMode,
       data: DataFrame) {
 
-    val useSessionId = (sessionId != null)
+    val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
     val csvHeader = Utils.csvHeadder(data.schema);
     logger.info("no of partitions before repartitioning is " + data.rdd.partitions.length)
     logger.info("Repartitioning rdd for 10mb partitions")
