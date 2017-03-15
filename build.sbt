@@ -13,7 +13,7 @@ resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repositor
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.0.7",
+  "io.lingk" % "salesforce-wave-api" % "1.0.8",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
