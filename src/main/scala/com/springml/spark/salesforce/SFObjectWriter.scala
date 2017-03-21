@@ -27,11 +27,24 @@ class SFObjectWriter (
   @transient val logger = Logger.getLogger(classOf[SFObjectWriter])
 
   def writeData(rdd: RDD[Row]): Boolean = {
-    val csvRDD = rdd.map(row => row.toSeq.map(value => Utils.rowValue(value)).mkString(","))
-    val jobId = bulkAPI.createJob(sfObject, operation(mode), WaveAPIConstants.STR_CSV).getId
+    // need to partition in such a way that each partition contains less than 10k records....  This is tricky to do without doing a count
+    // of everything.
+    // may be better to find an approach where new bulk job is created if we're going to pass 10000 records - can do by
+    // getting slice of iterator during mapPartitionsWithIndex below.
+    val rddCount = rdd.count
 
-    csvRDD.mapPartitionsWithIndex {
+    val newNumPartitions = (rddCount / 10000).toInt + 1
+    var csvRDD = rdd.map(row => row.toSeq.map(value => Utils.rowValue(value)).mkString(","))
+    val numPartitions = rdd.getNumPartitions
+    if (newNumPartitions > numPartitions) {
+      // need more partitions so each batch is smaller than 10000
+      csvRDD = csvRDD.repartition(newNumPartitions)
+    }
+    val opMode = operation(mode)
+        
+    val success = csvRDD.mapPartitionsWithIndex {
       case (index, iterator) => {
+        val jobId = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, apiVersion).createJob(sfObject, opMode, WaveAPIConstants.STR_CSV).getId
         val records = iterator.toArray.mkString("\n")
         var batchInfoId : String = null
         if (records != null && !records.isEmpty()) {
@@ -39,26 +52,20 @@ class SFObjectWriter (
           val batchInfo = bulkAPI.addBatch(jobId, data)
           batchInfoId = batchInfo.getId
         }
-         val success = (batchInfoId != null)
-        // Job status will be checked after completing all batches
+        val success = (batchInfoId != null)
+        bulkAPI.closeJob(jobId)
+        if (success) {
+            var i = 1
+            while (i < 99999 && !bulkAPI.isCompleted(jobId)) {
+                Thread.sleep(100)
+                i = i + 1
+            }
+        }
         List(success).iterator
       }
     }.reduce((a, b) => a & b)
 
-    bulkAPI.closeJob(jobId)
-    var i = 1
-    while (i < 999999) {
-      if (bulkAPI.isCompleted(jobId)) {
-        logger.info("Job completed")
-        return true
-      }
-
-
-    }
-
-    print("Returning false...")
-    logger.info("Job not completed. Timeout..." )
-    false
+    true
   }
 
   def bulkAPI() : BulkAPI = {
