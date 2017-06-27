@@ -21,6 +21,7 @@ class SFObjectWriter (
     val apiVersion: String,
     val sfObject: String,
     val mode: SaveMode,
+    val operation: String,
     val csvHeader: String
     ) extends Serializable {
 
@@ -40,7 +41,7 @@ class SFObjectWriter (
       // need more partitions so each batch is smaller than 10000
       csvRDD = csvRDD.repartition(newNumPartitions)
     }
-    val opMode = operation(mode)
+    val opMode = operation(mode, operation)
         
     val success = csvRDD.mapPartitionsWithIndex {
       case (index, iterator) => {
@@ -72,11 +73,13 @@ class SFObjectWriter (
     APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, apiVersion)
   }
 
-  private def operation(mode: SaveMode): String = {
+  private def operation(mode: SaveMode, op: String): String = {
     if (mode != null && SaveMode.Overwrite.name().equalsIgnoreCase(mode.name())) {
       WaveAPIConstants.STR_UPDATE
     } else if (mode != null && SaveMode.Append.name().equalsIgnoreCase(mode.name())) {
       WaveAPIConstants.STR_INSERT
+    } else if (op.equalsIgnoreCase("delete")) {
+      "delete"
     } else {
       logger.warn("SaveMode " + mode + " Not supported. Using 'insert' operation")
       WaveAPIConstants.STR_INSERT

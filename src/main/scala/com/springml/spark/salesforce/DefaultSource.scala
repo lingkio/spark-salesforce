@@ -61,6 +61,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     val username = optionalParam(parameters, "username")
     val password = optionalParam(parameters, "password")
     val sessionId = optionalParam(parameters, "sessionId")
+    val op = optionalParam(parameters, "operation")
     val login = parameters.getOrElse("login", "https://login.salesforce.com")
     val version = parameters.getOrElse("version", "36.0")
     val saql = parameters.get("saql")
@@ -96,6 +97,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     val username = optionalParam(parameters, "username")
     val password = optionalParam(parameters, "password")
     val sessionId = optionalParam(parameters, "sessionId")
+    val op = optionalParam(parameters, "operation")
     val datasetName = parameters.get("datasetName")
     val sfObject = parameters.get("sfObject")
     val appName = parameters.getOrElse("appName", null)
@@ -125,7 +127,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     } else {
       val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
       logger.info("Updating Salesforce Object")
-      updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, data)
+      updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data)
     }
 
     return createReturnRelation(data)
@@ -139,6 +141,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       version: String,
       sfObject: String,
       mode: SaveMode,
+      op: String,
       data: DataFrame) {
 
     val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
@@ -149,7 +152,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     logger.info("no of partitions after repartitioning is " + repartitionedRDD.partitions.length)
 
     val bulkAPI = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, version)
-    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, csvHeader)
+    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, op, csvHeader)
     logger.info("Writing data")
     val successfulWrite = writer.writeData(repartitionedRDD)
     logger.info(s"Writing data was successful was $successfulWrite")
