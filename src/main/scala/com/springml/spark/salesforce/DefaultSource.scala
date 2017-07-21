@@ -97,6 +97,11 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     val username = optionalParam(parameters, "username")
     val password = optionalParam(parameters, "password")
     val sessionId = optionalParam(parameters, "sessionId")
+    val concurrencyModeParam = parameters.get("concurrencyMode")
+    var concurrencyMode = "Serial";
+    if (concurrencyModeParam.isDefined) {
+      concurrencyMode = concurrencyModeParam.get
+    }
     val op = optionalParam(parameters, "operation")
     val datasetName = parameters.get("datasetName")
     val sfObject = parameters.get("sfObject")
@@ -127,7 +132,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     } else {
       val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
       logger.info("Updating Salesforce Object")
-      updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data)
+      updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data, concurrencyMode)
     }
 
     return createReturnRelation(data)
@@ -142,7 +147,8 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       sfObject: String,
       mode: SaveMode,
       op: String,
-      data: DataFrame) {
+      data: DataFrame,
+      concurrencyMode: String) {
 
     val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
     val csvHeader = Utils.csvHeadder(data.schema);
@@ -152,7 +158,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     logger.info("no of partitions after repartitioning is " + repartitionedRDD.partitions.length)
 
     val bulkAPI = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, version)
-    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, op, csvHeader)
+    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, op, csvHeader, concurrencyMode)
     logger.info("Writing data")
     val successfulWrite = writer.writeData(repartitionedRDD)
     logger.info(s"Writing data was successful was $successfulWrite")

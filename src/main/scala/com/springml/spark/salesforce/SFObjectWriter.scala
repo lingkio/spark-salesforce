@@ -22,7 +22,8 @@ class SFObjectWriter (
     val sfObject: String,
     val mode: SaveMode,
     val operation: String,
-    val csvHeader: String
+    val csvHeader: String,
+    val concurrencyMode: String
     ) extends Serializable {
 
   @transient val logger = Logger.getLogger(classOf[SFObjectWriter])
@@ -42,10 +43,10 @@ class SFObjectWriter (
       csvRDD = csvRDD.repartition(newNumPartitions)
     }
     val opMode = operation(mode, operation)
-        
+    val jobId = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, apiVersion, concurrencyMode).createJob(sfObject, opMode, WaveAPIConstants.STR_CSV).getId
+    
     val success = csvRDD.mapPartitionsWithIndex {
       case (index, iterator) => {
-        val jobId = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, apiVersion).createJob(sfObject, opMode, WaveAPIConstants.STR_CSV).getId
         val records = iterator.toArray.mkString("\n")
         var batchInfoId : String = null
         if (records != null && !records.isEmpty()) {
@@ -54,7 +55,6 @@ class SFObjectWriter (
           batchInfoId = batchInfo.getId
         }
         val success = (batchInfoId != null)
-        bulkAPI.closeJob(jobId)
         if (success) {
             var i = 1
             while (i < 99999 && !bulkAPI.isCompleted(jobId)) {
@@ -66,6 +66,7 @@ class SFObjectWriter (
       }
     }.reduce((a, b) => a & b)
 
+    bulkAPI.closeJob(jobId)
     true
   }
 
