@@ -55,18 +55,19 @@ class SFObjectWriter (
           batchInfoId = batchInfo.getId
         }
         val success = (batchInfoId != null)
-        if (success) {
-            var i = 1
-            while (i < 99999 && !bulkAPI.isCompleted(jobId)) {
-                Thread.sleep(100)
-                i = i + 1
-            }
-        }
+
         List(success).iterator
       }
     }.reduce((a, b) => a & b)
 
     bulkAPI.closeJob(jobId)
+    if (success) {
+        var i = 1
+        while (i < 5000 && !bulkAPI.isCompleted(jobId)) {
+            Thread.sleep(2000)
+            i = i + 1
+        }
+    }
     true
   }
 
