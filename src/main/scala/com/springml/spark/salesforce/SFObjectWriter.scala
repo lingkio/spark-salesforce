@@ -28,7 +28,7 @@ class SFObjectWriter (
 
   @transient val logger = Logger.getLogger(classOf[SFObjectWriter])
 
-  def writeData(rdd: RDD[Row]): Boolean = {
+  def writeData(rdd: RDD[Row]): SFBulkResult = {
     // need to partition in such a way that each partition contains less than 10k records....  This is tricky to do without doing a count
     // of everything.
     // may be better to find an approach where new bulk job is created if we're going to pass 10000 records - can do by
@@ -68,7 +68,9 @@ class SFObjectWriter (
             i = i + 1
         }
     }
-    true
+    val bulkCount = bulkAPI.getRowCount(jobId)
+    
+    return new SFBulkResult(success, bulkCount.getSucceeded(), bulkCount.getFailed())
   }
 
   def bulkAPI() : BulkAPI = {

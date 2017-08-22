@@ -132,13 +132,20 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     } else {
       val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
       logger.info("Updating Salesforce Object")
-      updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data, concurrencyMode)
+      val bulkResult = updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data, concurrencyMode)
+	  val json = "{\"overallSuccess\": " + bulkResult.overallSuccess + "," +
+	               "\"successfulRecords\": " + bulkResult.successfulRecords + "," +
+	               "\"failedRecords\": " + bulkResult.failedRecords + "}"
+	  import sqlContext.sparkSession.implicits._
+	  val dataset = sqlContext.createDataset(json :: Nil)
+	  val returnDF = sqlContext.sparkSession.read.json(dataset.rdd)
+	  returnDF.createOrReplaceTempView("sfresults")
     }
 
     return createReturnRelation(data)
   }
 
-  private def updateSalesforceObject(
+  private def updateSalesforceObject (
       username: String,
       password: String,
       sessionId: String,
@@ -148,7 +155,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       mode: SaveMode,
       op: String,
       data: DataFrame,
-      concurrencyMode: String) {
+      concurrencyMode: String): SFBulkResult = {
 
     val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
     val csvHeader = Utils.csvHeadder(data.schema);
@@ -160,12 +167,11 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     val bulkAPI = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, version)
     val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, op, csvHeader, concurrencyMode)
     logger.info("Writing data")
-    val successfulWrite = writer.writeData(repartitionedRDD)
-    logger.info(s"Writing data was successful was $successfulWrite")
-    if (!successfulWrite) {
-      sys.error("Unable to update salesforce object")
-    }
-
+    val bulkResult = writer.writeData(repartitionedRDD)
+    //if (!successfulWrite) {
+    //  sys.error("Unable to update salesforce object")
+    //}
+	bulkResult
   }
 
   private def writeInSalesforceWave(
