@@ -34,6 +34,9 @@ class SFObjectWriter (
     // may be better to find an approach where new bulk job is created if we're going to pass 10000 records - can do by
     // getting slice of iterator during mapPartitionsWithIndex below.
     val rddCount = rdd.count
+    if (rddCount == 0) {
+      return new SFBulkResult(true, 0, 0)
+    }
 
     val newNumPartitions = (rddCount / 10000).toInt + 1
     var csvRDD = rdd.map(row => row.toSeq.map(value => Utils.rowValue(value)).mkString(","))
