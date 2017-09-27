@@ -113,6 +113,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     val metadataFile = parameters.get("metadataFile")
     val encodeFields = parameters.get("encodeFields")
     val monitorJob = parameters.getOrElse("monitorJob", "false")
+    val batchSize = parameters.getOrElse("batchSize", 10000).toString.toInt
 
     validateMutualExclusive(datasetName, sfObject, "datasetName", "sfObject")
     validateMutualExclusive(parameters.get("username"), parameters.get("sessionId"), "username", "sessionid")
@@ -132,7 +133,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     } else {
       val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
       logger.info("Updating Salesforce Object")
-      val bulkResult = updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data, concurrencyMode)
+      val bulkResult = updateSalesforceObject(username, password, sessionId, login, version, sfObject.get, mode, op, data, concurrencyMode, batchSize)
 	  val json = "{\"overallSuccess\": " + bulkResult.overallSuccess + "," +
 	               "\"successfulRecords\": " + bulkResult.successfulRecords + "," +
 	               "\"failedRecords\": " + bulkResult.failedRecords + "}"
@@ -155,7 +156,8 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
       mode: SaveMode,
       op: String,
       data: DataFrame,
-      concurrencyMode: String): SFBulkResult = {
+      concurrencyMode: String,
+      batchSize: Int): SFBulkResult = {
 
     val useSessionId = (sessionId != None && sessionId != null && sessionId != "")
     val csvHeader = Utils.csvHeadder(data.schema);
@@ -165,7 +167,7 @@ class DefaultSource extends RelationProvider with SchemaRelationProvider with Cr
     logger.info("no of partitions after repartitioning is " + repartitionedRDD.partitions.length)
 
     val bulkAPI = APIFactory.getInstance.bulkAPI(username, password, useSessionId, sessionId, login, version)
-    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, op, csvHeader, concurrencyMode)
+    val writer = new SFObjectWriter(username, password, useSessionId, sessionId, login, version, sfObject, mode, op, csvHeader, concurrencyMode, batchSize)
     logger.info("Writing data")
     val bulkResult = writer.writeData(repartitionedRDD)
     //if (!successfulWrite) {

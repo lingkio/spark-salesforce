@@ -23,7 +23,8 @@ class SFObjectWriter (
     val mode: SaveMode,
     val operation: String,
     val csvHeader: String,
-    val concurrencyMode: String
+    val concurrencyMode: String,
+    val batchSize: Int
     ) extends Serializable {
 
   @transient val logger = Logger.getLogger(classOf[SFObjectWriter])
@@ -38,11 +39,11 @@ class SFObjectWriter (
       return new SFBulkResult(true, 0, 0)
     }
 
-    val newNumPartitions = (rddCount / 10000).toInt + 1
+    val newNumPartitions = (rddCount / batchSize).toInt + 1
     var csvRDD = rdd.map(row => row.toSeq.map(value => Utils.rowValue(value)).mkString(","))
     val numPartitions = rdd.getNumPartitions
     if (newNumPartitions > numPartitions) {
-      // need more partitions so each batch is smaller than 10000
+      // need more partitions so each batch is smaller than batchSize
       csvRDD = csvRDD.repartition(newNumPartitions)
     }
     val opMode = operation(mode, operation)
