@@ -5,6 +5,20 @@ This fork contains modifications to support bearerToken (and sessionId) authenti
 
 A library for connecting Spark with Salesforce and Salesforce Wave.
 
+
+## Building
+  * Go to the repo above and build jar: `sbt package`
+  * And build pom: `sbt make-pom`
+
+## Deployment
+Deployment is currently manual.  Make sure that you have a user for myget with permissions to upload to the spark-salesforce-lingk feed (https://www.myget.org/feed/Packages/spark-salesforce-lingk).
+
+From the "Packages" page of the feed:
+  * Add Package -> Maven Package
+  * choose $SPARK_SALESFORCE_HOME/target/scala-2.1.1/spark-salesforce_2.11-$VERSION.jar for the jar
+  * choose $SPARK_SALESFORCE_HOME/target/scala-2.1.1/spark-salesforce_2.11-$VERSION.pom for the pom
+  
+
 ## Requirements
 
 This library requires Spark 1.4+

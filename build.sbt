@@ -1,19 +1,20 @@
 name := "spark-salesforce"
 
-version := "2.0.0"
+version := "2.0.2"
 
 organization := "io.lingk"
 
 scalaVersion := "2.11.7"
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
 
-resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+//resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
 
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.0.8",
+  "io.lingk" % "salesforce-wave-api" % "1.0.10",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
@@ -39,9 +40,7 @@ spName := "springml/spark-salesforce"
 
 spAppendScalaVersion := true
 
-// spDependencies += "databricks/spark-csv:1.3.0"
-
-sparkVersion := "2.0.0"
+sparkVersion := "2.1.1"
 
 sparkComponents += "sql"
 
@@ -57,8 +56,6 @@ spDescription := """Spark Salesforce Wave Connector
                     | - Can use custom metadata for constructing Salesforce Wave dataset's metadata""".stripMargin
 
 // licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
-
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
 pomExtra := (
   <url>https://github.com/springml/spark-salesforce</url>
