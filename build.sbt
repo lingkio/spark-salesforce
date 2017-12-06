@@ -1,6 +1,6 @@
 name := "spark-salesforce"
 
-version := "2.0.2"
+version := "2.0.3"
 
 organization := "io.lingk"
 
@@ -40,7 +40,7 @@ spName := "springml/spark-salesforce"
 
 spAppendScalaVersion := true
 
-sparkVersion := "2.1.1"
+sparkVersion := "2.2.0"
 
 sparkComponents += "sql"
 

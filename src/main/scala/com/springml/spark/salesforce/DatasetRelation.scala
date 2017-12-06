@@ -197,6 +197,8 @@ case class DatasetRelation(
 
   override def buildScan(): RDD[Row] = {
     val schemaFields = schema.fields
+    // TODO: where records is read in, it reads the entire set into memory at once.
+    // need to move the iteration here, where we can control the parallelization.
     logger.info("Total records size : " + records.size())
     val rowArray = new Array[Row](records.size())
     var rowIndex: Int = 0
