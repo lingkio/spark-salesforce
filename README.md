@@ -11,7 +11,7 @@ A library for connecting Spark with Salesforce and Salesforce Wave.
   * And build pom: `sbt make-pom`
 
 ## Deployment
-Deployment is currently manual.  Make sure that you have a user for myget with permissions to upload to the spark-salesforce-lingk feed (https://www.myget.org/feed/Packages/spark-salesforce-lingk).
+Deployment is currently manual.  Make sure that you have a user for myget with permissions to upload to the spark-salesforce-lingk feed (https://www.myget.org/feed/Packages/transformer-dependencies-lingk).
 
 From the "Packages" page of the feed:
   * Add Package -> Maven Package
