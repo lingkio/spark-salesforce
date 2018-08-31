@@ -178,44 +178,37 @@ case class DatasetRelation(
     var records: java.util.List[java.util.Map[String, String]] = cachedResult
     val resultList = new java.util.ArrayList[RDD[Row]]
     // check cached records that we may have already read for a different method call
+    var workingResult: RDD[Row] = null
     if (records != null) {
-      resultList.add(readResultToRDD(records))
+      workingResult = readResultToRDD(records)
 	}
 	
 	if (resultSet != null) {
+      var i: Int = 0
+      val checkpointFrequency: Int = 10
       while (!resultSet.isDone()) {
-        resultList.add(readResultToRDD(readNext))
+        var singleRdd = readResultToRDD(readNext)
+        if (workingResult == null) {
+          workingResult = singleRdd;
+        } else {
+          val previousWorkingResult: RDD[Row] = workingResult
+          workingResult = workingResult.union(singleRdd)
+          i = i + 1
+          if (i % checkpointFrequency == 0) {
+            workingResult.persist(StorageLevel.MEMORY_AND_DISK_SER)
+            workingResult.checkpoint()
+            workingResult.take(1)
+            previousWorkingResult.unpersist()
+          }
+        }
       }
     }
     
     // reset....  in case this is called again
     resultSet = null
     cachedResult = null
-    unionRDDs(resultList)
+    workingResult
   }
-  
-  private def unionRDDs(rdds: java.util.List[RDD[Row]]): RDD[Row] = {
-    var workingResult: RDD[Row] = null
-    var i: Int = 0
-    val checkpointFrequency: Int = 10
-    for (rdd <- rdds) {
-      if (workingResult == null) {
-        workingResult = rdd
-      } else {
-        val previousWorkingResult: RDD[Row] = workingResult
-        workingResult = workingResult.union(rdd)
-        i = i + 1
-        if (i % checkpointFrequency == 0) {
-          workingResult.persist(StorageLevel.MEMORY_AND_DISK_SER)
-          workingResult.checkpoint()
-          workingResult.take(1)
-          previousWorkingResult.unpersist()
-        }
-      }
-    }
-    workingResult;
-  }
-
   
   private def readResultToRDD(records: java.util.List[java.util.Map[String, String]]): RDD[Row] = {
     val schemaFields = schema.fields
