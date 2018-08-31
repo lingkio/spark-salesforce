@@ -197,7 +197,7 @@ case class DatasetRelation(
   private def unionRDDs(rdds: java.util.List[RDD[Row]]): RDD[Row] = {
     var workingResult: RDD[Row] = null
     var i: Int = 0
-    val checkpointFrequency: Int = 100
+    val checkpointFrequency: Int = 10
     for (rdd <- rdds) {
       if (workingResult == null) {
         workingResult = rdd
