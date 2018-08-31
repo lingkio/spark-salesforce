@@ -25,8 +25,10 @@ import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.types.TimestampType
+import org.apache.spark.storage.StorageLevel
 import com.springml.salesforce.wave.api.ForceAPI
 import com.springml.salesforce.wave.api.WaveAPI
+import com.springml.salesforce.wave.model.SOQLResult
 import java.net.URLEncoder
 
 /**
@@ -45,51 +47,17 @@ case class DatasetRelation(
 
   private val logger = Logger.getLogger(classOf[DatasetRelation])
 
-  val records = read()
+  var resultSet: SOQLResult = null;
+  var cachedResult: java.util.List[java.util.Map[String, String]] = null;
 
-  def read(): java.util.List[java.util.Map[String, String]] = {
-    var records: java.util.List[java.util.Map[String, String]]= null;
-    // Query getting executed here
-    if (waveAPI != null) {
-      records = queryWave()
-    } else if (forceAPI != null) {
-      records = querySF()
-    }
-
-    records
-  }
-
-  private def queryWave(): java.util.List[java.util.Map[String, String]] = {
-    var records: java.util.List[java.util.Map[String, String]]= null;
-
-    if (resultVariable == null || !resultVariable.isDefined) {
-      val resultSet = waveAPI.query(query)
-      records = resultSet.getResults.getRecords
-    } else {
-      var resultSet = waveAPI.queryWithPagination(query, resultVariable.get, pageSize)
-      records = resultSet.getResults.getRecords
-
-      while (!resultSet.isDone()) {
-        resultSet = waveAPI.queryMore(resultSet)
-        records.addAll(resultSet.getResults.getRecords)
-      }
-    }
-
-    records
-  }
-
-  private def querySF(): java.util.List[java.util.Map[String, String]] = {
-      var records: java.util.List[java.util.Map[String, String]]= null;
-
-      var resultSet = forceAPI.query(query)
-      records = resultSet.filterRecords()
-
-      while (!resultSet.isDone()) {
-        resultSet = forceAPI.queryMore(resultSet)
-        records.addAll(resultSet.filterRecords())
-      }
-
-      return records
+  private def readNext(): java.util.List[java.util.Map[String, String]] = {
+    if (resultSet == null) {
+	  resultSet = forceAPI.query(query)
+	} else {
+	  // we've already run a query, so need to read the next page
+	  resultSet = forceAPI.queryMore(resultSet)
+	}
+    resultSet.filterRecords()
   }
 
   private def cast(fieldValue: String, toType: DataType,
@@ -135,6 +103,10 @@ case class DatasetRelation(
     // Defaulting sample values to 10
     val NO_OF_SAMPLE_ROWS = 10;
     // If the record is less than 10, then the whole data is used as sample
+    if (cachedResult == null) {
+	    cachedResult = readNext;
+	}
+	var records: java.util.List[java.util.Map[String, String]] = cachedResult
     val sampleSize = if (records.size() < NO_OF_SAMPLE_ROWS) {
       records.size()
     } else {
@@ -146,7 +118,6 @@ case class DatasetRelation(
     val sampleRowArray = new Array[Array[String]](sampleSize)
     for (i <- 0 to sampleSize - 1) {
       val row = records(i);
-      logger.debug("rows size : " + row.size())
       val fieldArray = new Array[String](row.size())
 
       var fieldIndex: Int = 0
@@ -163,6 +134,10 @@ case class DatasetRelation(
   }
 
   private def header: Array[String] = {
+    if (cachedResult == null) {
+	    cachedResult = readNext;
+	}
+	var records: java.util.List[java.util.Map[String, String]] = cachedResult
     val firstRow = records.iterator().next()
     val header = new Array[String](firstRow.size())
     var index: Int = 0
@@ -175,6 +150,10 @@ case class DatasetRelation(
   }
 
   override def schema: StructType = {
+    if (cachedResult == null) {
+	    cachedResult = readNext;
+	}
+	var records: java.util.List[java.util.Map[String, String]] = cachedResult
     if (userSchema != null) {
       userSchema
     } else if (records == null || records.size() == 0) {
@@ -196,10 +175,50 @@ case class DatasetRelation(
   }
 
   override def buildScan(): RDD[Row] = {
+    var records: java.util.List[java.util.Map[String, String]] = cachedResult
+    val resultList = new java.util.ArrayList[RDD[Row]]
+    // check cached records that we may have already read for a different method call
+    if (records != null) {
+      resultList.add(readResultToRDD(records))
+	}
+	
+	if (resultSet != null) {
+      while (!resultSet.isDone()) {
+        resultList.add(readResultToRDD(readNext))
+      }
+    }
+    
+    // reset....  in case this is called again
+    resultSet = null
+    cachedResult = null
+    unionRDDs(resultList)
+  }
+  
+  private def unionRDDs(rdds: java.util.List[RDD[Row]]): RDD[Row] = {
+    var workingResult: RDD[Row] = null
+    var i: Int = 0
+    val checkpointFrequency: Int = 100
+    for (rdd <- rdds) {
+      if (workingResult == null) {
+        workingResult = rdd
+      } else {
+        val previousWorkingResult: RDD[Row] = workingResult
+        workingResult = workingResult.union(rdd)
+        i = i + 1
+        if (i % checkpointFrequency == 0) {
+          workingResult.persist(StorageLevel.MEMORY_AND_DISK_SER)
+          workingResult.checkpoint()
+          workingResult.take(1)
+          previousWorkingResult.unpersist()
+        }
+      }
+    }
+    workingResult;
+  }
+
+  
+  private def readResultToRDD(records: java.util.List[java.util.Map[String, String]]): RDD[Row] = {
     val schemaFields = schema.fields
-    // TODO: where records is read in, it reads the entire set into memory at once.
-    // need to move the iteration here, where we can control the parallelization.
-    logger.info("Total records size : " + records.size())
     val rowArray = new Array[Row](records.size())
     var rowIndex: Int = 0
     for (row <- records) {
