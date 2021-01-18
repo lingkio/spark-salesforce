@@ -1,10 +1,11 @@
 name := "spark-salesforce"
 
-version := "2.0.8"
+version := "2.1.0"
 
 organization := "io.lingk"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.12.13"
+crossScalaVersions := Seq("2.11.12", "2.12.13")
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
@@ -14,7 +15,7 @@ resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.0.12",
+  "io.lingk" % "salesforce-wave-api" % "1.0.22",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
@@ -31,7 +32,6 @@ resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositor
 resolvers += "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages/maven"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-libraryDependencies += "com.madhukaraphatak" %% "java-sizeof" % "0.1"
 libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.8.5"
 libraryDependencies += "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.0"
 
@@ -40,7 +40,7 @@ spName := "springml/spark-salesforce"
 
 spAppendScalaVersion := true
 
-sparkVersion := "2.2.0"
+sparkVersion := "2.4.7"
 
 sparkComponents += "sql"
 
