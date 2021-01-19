@@ -1,6 +1,6 @@
 name := "spark-salesforce"
 
-version := "2.1.0"
+version := "2.1.1"
 
 organization := "io.lingk"
 
@@ -15,7 +15,7 @@ resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.0.22",
+  "io.lingk" % "salesforce-wave-api" % "1.0.12",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
@@ -40,7 +40,7 @@ spName := "springml/spark-salesforce"
 
 spAppendScalaVersion := true
 
-sparkVersion := "2.4.7"
+sparkVersion := "3.0.1"
 
 sparkComponents += "sql"
 
