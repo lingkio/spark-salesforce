@@ -175,6 +175,7 @@ case class DatasetRelation(
   }
 
   override def buildScan(): RDD[Row] = {
+    val checkpointEnabled = System.getenv("CHECKPOINT_ENABLED").toBoolean
     var records: java.util.List[java.util.Map[String, String]] = cachedResult
     val resultList = new java.util.ArrayList[RDD[Row]]
     // check cached records that we may have already read for a different method call
@@ -193,12 +194,12 @@ case class DatasetRelation(
         } else {
           val previousWorkingResult: RDD[Row] = workingResult
           workingResult = workingResult.union(singleRdd)
+          workingResult.persist(StorageLevel.MEMORY_AND_DISK_SER)
+          previousWorkingResult.unpersist()
           i = i + 1
-          if (i % checkpointFrequency == 0) {
-            workingResult.persist(StorageLevel.MEMORY_AND_DISK_SER)
+          if (i % checkpointFrequency == 0 && checkpointEnabled) {
             workingResult.checkpoint()
             workingResult.take(1)
-            previousWorkingResult.unpersist()
           }
         }
       }
