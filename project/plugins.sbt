@@ -1,3 +1,6 @@
+resolvers += "spark-packages" at "https://repos.spark-packages.org/"
+resolvers += "Maven Central Server" at "https://repo1.maven.org/maven2/"
+resolvers += "Typesafe Server" at "https://repo.typesafe.com/typesafe/releases/"
 resolvers += "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/"
 addSbtPlugin("org.spark-packages" % "sbt-spark-package" % "0.2.2")
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.12.0")

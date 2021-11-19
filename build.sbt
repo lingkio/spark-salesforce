@@ -1,11 +1,11 @@
 name := "spark-salesforce"
 
-version := "2.1.2"
+version := "3.0.0"
 
 organization := "io.lingk"
 
 scalaVersion := "2.12.13"
-crossScalaVersions := Seq("2.11.12", "2.12.13")
+crossScalaVersions := Seq("2.12.13")
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
@@ -15,7 +15,7 @@ resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.0.12",
+  "io.lingk" % "salesforce-wave-api" % "1.0.22",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
@@ -23,7 +23,7 @@ parallelExecution in Test := false
 
 resolvers += Resolver.url("artifactory", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 
-resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
 
 resolvers += "sonatype-releases" at "https://oss.sonatype.org/content/repositories/releases/"
 
@@ -31,16 +31,16 @@ resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositor
 
 resolvers += "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages/maven"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % "test"
 libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.8.5"
-libraryDependencies += "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.0"
+libraryDependencies += "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.1"
 
 // Spark Package Details (sbt-spark-package)
 spName := "springml/spark-salesforce"
 
 spAppendScalaVersion := true
 
-sparkVersion := "3.0.1"
+sparkVersion := "3.2.0"
 
 sparkComponents += "sql"
 
