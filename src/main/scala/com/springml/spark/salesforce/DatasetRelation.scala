@@ -84,7 +84,8 @@ case class DatasetRelation(
 
   private def encode(value: String, fieldName: String): String = {
     if (shouldEncode(fieldName)) {
-      URLEncoder.encode(value, "UTF-8")
+//      URLEncoder.encode(value, "UTF-8")
+      value
     } else {
       value
     }
@@ -183,7 +184,7 @@ case class DatasetRelation(
     if (records != null) {
       workingResult = readResultToRDD(records)
 	}
-	
+
 	if (resultSet != null) {
       var i: Int = 0
       val checkpointFrequency: Int = 10
@@ -204,13 +205,13 @@ case class DatasetRelation(
         }
       }
     }
-    
+
     // reset....  in case this is called again
     resultSet = null
     cachedResult = null
     workingResult
   }
-  
+
   private def readResultToRDD(records: java.util.List[java.util.Map[String, String]]): RDD[Row] = {
     val schemaFields = schema.fields
     val rowArray = new Array[Row](records.size())
