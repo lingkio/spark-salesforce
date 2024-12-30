@@ -1,11 +1,11 @@
 name := "spark-salesforce"
 
-version := "2.1.2"
+version := "3.0.0"
 
 organization := "io.lingk"
 
-scalaVersion := "2.12.13"
-crossScalaVersions := Seq("2.11.12", "2.12.13")
+scalaVersion := "2.12.20"
+crossScalaVersions := Seq("2.12.20")
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
@@ -15,22 +15,38 @@ resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.0.12",
+  "io.lingk" % "salesforce-wave-api" % "2.0.0",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.4"
+
 parallelExecution in Test := false
 
-resolvers += Resolver.url("artifactory", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+//resolvers += Resolver.url("artifactory", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 
-resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += Resolver.url("artifactory", url("https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+resolvers += Resolver.url("sbt-maven-releases", url("https://repo.scala-sbt.org/scalasbt/maven-releases"))(Resolver.ivyStylePatterns)
+resolvers += Resolver.url("sbt-maven-snapshots", url("https://repo.scala-sbt.org/scalasbt/maven-snapshots"))(Resolver.ivyStylePatterns)
+//resolvers += Resolver.url("Maven Central", url("https://repo1.maven.org/maven2/"))(Resolver.ivyStylePatterns)
+//resolvers ++= Seq(
+//  "sbt-maven-releases"  at "https://repo.scala-sbt.org/scalasbt/maven-releases",
+//  "sbt-maven-snapshots" at "https://repo.scala-sbt.org/scalasbt/maven-snapshots",
+//  "Maven Central"       at "https://repo1.maven.org/maven2/"
+//)(Resolver.ivyStylePatterns)
+
+//resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 resolvers += "sonatype-releases" at "https://oss.sonatype.org/content/repositories/releases/"
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
 resolvers += "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages/maven"
-
+resolvers ++= Seq(
+  "Maven Central" at "https://repo1.maven.org/maven2/"
+)
+//updateOptions := updateOptions.value.withChecksums(false)
+libraryDependencies += "io.lingk" % "salesforce-wave-api" % "2.0.0" from "file:///Users/mahendrabagul/DevEnv/lingk/repos/salesforce-wave-api/target/salesforce-wave-api-2.0.0.jar"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.8.5"
 libraryDependencies += "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.0"
@@ -40,7 +56,7 @@ spName := "springml/spark-salesforce"
 
 spAppendScalaVersion := true
 
-sparkVersion := "3.0.1"
+sparkVersion := "3.5.3"
 
 sparkComponents += "sql"
 

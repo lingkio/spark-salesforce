@@ -17,7 +17,9 @@
 package com.springml.spark.salesforce
 
 import scala.io.Source
-import scala.util.parsing.json._
+//import scala.util.parsing.json._
+import play.api.libs.json._
+
 import com.sforce.soap.partner.{SaveResult, Connector, PartnerConnection}
 import com.sforce.ws.ConnectorConfig
 import com.madhukaraphatak.sizeof.SizeEstimator
@@ -237,10 +239,19 @@ object Utils extends Serializable {
     readJSON(jsonContent)
   }
 
-  private def readJSON(jsonContent : String) : Map[String, Map[String, String]]= {
-    val result = JSON.parseFull(jsonContent)
-    val resMap: Map[String, Map[String, String]] = result.get.asInstanceOf[Map[String, Map[String, String]]]
-    resMap
-  }
+//  private def readJSON(jsonContent : String) : Map[String, Map[String, String]]= {
+//    val result = JSON.parseFull(jsonContent)
+//    val resMap: Map[String, Map[String, String]] = result.get.asInstanceOf[Map[String, Map[String, String]]]
+//    resMap
+//  }
 
+  private def readJSON(jsonContent: String): Map[String, Map[String, String]] = {
+    // Parse the JSON content
+    val json = Json.parse(jsonContent)
+
+    // Convert JSON to a nested Map[String, Map[String, String]]
+    val result = json.as[Map[String, Map[String, String]]]
+
+    result
+  }
 }
