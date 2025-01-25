@@ -49,7 +49,7 @@ resolvers ++= Seq(
 libraryDependencies += "io.lingk" % "salesforce-wave-api" % "2.0.0" from "file:///Users/mahendrabagul/DevEnv/lingk/repos/salesforce-wave-api/target/salesforce-wave-api-2.0.0.jar"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.8.5"
-libraryDependencies += "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.0"
+libraryDependencies += "com.fasterxml.woodstox" % "woodstox-core" % "5.0.3"
 
 // Spark Package Details (sbt-spark-package)
 spName := "springml/spark-salesforce"
