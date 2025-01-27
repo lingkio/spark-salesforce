@@ -1,6 +1,6 @@
 name := "spark-salesforce"
 
-version := "3.0.0"
+version := "4.0.3"
 
 organization := "io.lingk"
 
@@ -9,14 +9,14 @@ crossScalaVersions := Seq("2.12.20")
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
-
-//resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+resolvers += Resolver.mavenLocal
+resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
 
 libraryDependencies ++= Seq(
   "com.force.api" % "force-wsc" % "39.0.1",
   "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "2.0.0",
-  "org.mockito" % "mockito-core" % "2.2.22"
+  "io.lingk" % "salesforce-wave-api" % "3.0.3",
+  "org.mockito" % "mockito-core" % "5.0.0"
 )
 
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.4"
@@ -45,11 +45,13 @@ resolvers += "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages
 resolvers ++= Seq(
   "Maven Central" at "https://repo1.maven.org/maven2/"
 )
+resolvers += Resolver.mavenLocal
+
 //updateOptions := updateOptions.value.withChecksums(false)
-libraryDependencies += "io.lingk" % "salesforce-wave-api" % "2.0.0" from "file:///Users/mahendrabagul/DevEnv/lingk/repos/salesforce-wave-api/target/salesforce-wave-api-2.0.0.jar"
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.8.5"
-libraryDependencies += "com.fasterxml.woodstox" % "woodstox-core" % "5.0.3"
+libraryDependencies += "io.lingk" % "salesforce-wave-api" % "3.0.3" from "file:///Users/mahendrabagul/DevEnv/lingk/repos/salesforce-wave-api/target/salesforce-wave-api-3.0.3.jar"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.2" % "test"
+libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.9.10"
+libraryDependencies += "com.fasterxml.woodstox" % "woodstox-core" % "5.3.0"
 
 // Spark Package Details (sbt-spark-package)
 spName := "springml/spark-salesforce"
