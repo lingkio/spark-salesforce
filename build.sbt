@@ -1,6 +1,6 @@
 name := "spark-salesforce"
 
-version := "2.5.0"
+version := "3.0.1"
 
 organization := "io.lingk"
 
@@ -13,9 +13,9 @@ resolvers += "myget" at "https://www.myget.org/F/salesforce-wave-api/maven"
 //resolvers += "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
 
 libraryDependencies ++= Seq(
-  "com.force.api" % "force-wsc" % "39.0.1",
-  "com.force.api" % "force-partner-api" % "39.0.0",
-  "io.lingk" % "salesforce-wave-api" % "1.5.0",
+  "com.force.api" % "force-wsc" % "51.2.0",
+  "com.force.api" % "force-partner-api" % "51.2.0",
+  "io.lingk" % "salesforce-wave-api" % "2.0.1",
   "org.mockito" % "mockito-core" % "2.2.22"
 )
 
@@ -33,9 +33,9 @@ resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositor
 
 resolvers += "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages/maven"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.8.5"
-libraryDependencies += "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.0"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % "test"
+libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.13.4"
+libraryDependencies += "com.fasterxml.woodstox" % "woodstox-core" % "6.2.6"
 
 // Spark Package Details (sbt-spark-package)
 spName := "springml/spark-salesforce"
